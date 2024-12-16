@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'golang:1.20' // Use the appropriate Go version
+            args '-v /var/jenkins_home/go:/go' // Mount the Go workspace
+        }
+    }
 
     stages {
         stage('Checkout') {
@@ -13,10 +18,6 @@ pipeline {
             steps {
                 // Navigate to the chat-service directory
                 dir('chat-service') {
-                    // Set up Go environment
-                    sh 'export GOPATH=$HOME/go'
-                    sh 'export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin'
-
                     // Install dependencies
                     sh 'go mod tidy'
 
