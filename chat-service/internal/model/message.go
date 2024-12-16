@@ -1,4 +1,4 @@
-package mysocket
+package model
 
 import "time"
 

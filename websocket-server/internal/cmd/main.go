@@ -1,25 +1,32 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
-	"websocket/internal/mysocket"
+	MyRequestHandler "websocket/internal/api"
+	"websocket/internal/mywebsocket"
 )
 
 func main() {
-	// Initialize the Hub
-	hub := mysocket.NewHub()
-	go hub.Run() // Start the Hub goroutine
+	// Initialize the WebSocketManager
+	hub := mywebsocket.NewHub()
+	go hub.Run() // Start the WebSocketManager goroutine
+
+	// Create a new Gin router
+	router := gin.Default()
 
 	// Define the WebSocket route
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		mysocket.ServeWebSocket(hub, w, r)
+	router.GET("/ws", func(c *gin.Context) {
+		mywebsocket.ServeWebSocket(hub, c.Writer, c.Request)
 	})
 
-	// Start the HTTP server
+	requestHandler := MyRequestHandler.NewRequestHandler(hub)
+	router.POST("/onReceive", requestHandler.OnReceiveMessage)
+
+	// Start the HTTP server on port 8080
 	addr := ":8080"
-	log.Printf("WebSocket server started on %s", addr)
-	if err := http.ListenAndServe(addr, nil); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	log.Printf("Server started on %s", addr)
+	if err := router.Run(addr); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
 	}
 }
